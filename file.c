@@ -3,7 +3,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 
- 
+#define NO_ARGS 1
+#define EMPTY_FILE 2
+#define ERROR_FILE 3
+
+//calculate average mark
 float rating(float s, float c)
 {
     if(c<3)
@@ -13,31 +17,58 @@ float rating(float s, float c)
     }
     return(s/c);
 }
+
+//calculate the best mark among students
+int best_stud(int number, stud* r)
+{
+    float max = 0;
+
+    int number_of_stud;
+
+    for(int i =0; i<number; i++)
+    {
+        if(r[i].avrg_mark>max)
+        {
+            max=r[i].avrg_mark;
+            number_of_stud=i;
+        }
+    }
+
+    return number_of_stud;
+}
  
 typedef struct class
 {
     char name[200];
-    float med_mark;
+    float avrg_mark;
 }stud;
  
-int main()
+int main(int argc, char* argv[])
 {
-    char name_f[] = "/home/ekaterina/rs/documents/file";
+    if(argc<1)
+    {
+        printf("Please, enter the path to the file before starting the program");
+        return NO_ARGS;
+    }
+
+    char name_f[argc];
+
+    for(int i=0; i<argc; i++)
+    {
+        name_f[i] = argv[i];
+    }
+
     FILE *f =fopen(name_f , "r");
 
     if(f==NULL)
     {
-        printf("Файл пуст");
-        return NULL;
+        return EMPTY_FILE;
     }
 
-    char str[1000];
+    char str= calloc(100, sizeof(char));
     stud arr[30];
    
-    float sum_mark;
-    float count_mark;
     char name_s[200];
-    int end_name;
     int num_str =0;
 
     while(feof(f)==0)
@@ -45,55 +76,41 @@ int main()
         fgets(str,999,f);
      
         int len_str = strlen(str);
-        end_name = len_str;
-        sum_mark =0;
-        count_mark = 0;
+        float sum_mark =0;
+        float count_mark = 0;
  
-   
-        for(int i=len_str; i>0;i--)
+        while(isdigit(str[len_str] || str[len_str] == ','))
         {
             if(isdigit(str[i]))
             {
-                sum_mark += (str[i]&0x0F);
+                sum_mark += (str[i]-'0');
                 count_mark++;
-                end_name = i-1;
             }
+            len_str--;
         }
 
-    arr[b].med_mark =rating(sum_mark,count_mark);
-   
-    memset (name_s, 0, sizeof(name_s));
-   
-    for(int i= 0; i<end_name; i++)
-        {
-            name_s[i]=str[i];
-        }
+        int end_name = len_str-1;
 
-    strcpy(arr[num_str].name, name_s);
+        arr[num_str].avrg_mark =rating(sum_mark,count_mark);
+       
+        for(int i= 0; i<end_name; i++)
+            {
+                arr[num_str].name[i]=str[i];
+            }
 
-    num_str++;
+        num_str++;
 
     }
 
     if(ferror(f))
         {
             perror("AAAAAA:" );
+            return ERROR_FILE;
         }
     fclose(f);
-    
 
-    double max = 0;
-
-    int number_of_stud;
-
-    for(int i =0; i<b; i++)
-    {
-        if(arr[i].med_mark>max)
-        {
-            max=arr[i].med_mark;
-            number_of_stud=i;
-        }
-    } 
-printf("Ученик с самым высоким средним баллом:  %f \n%s",  arr[number_of_stud].med_mark,
- arr[number_of_stud].name);
+    int number_of_stud = best_stud(num_str,arr);
+ 
+    printf("Ученик с самым высоким средним баллом:  %f \n%s",  arr[number_of_stud].avrg_mark,
+    arr[number_of_stud].name);
 }
