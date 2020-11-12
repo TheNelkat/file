@@ -7,29 +7,35 @@
 #define EMPTY_FILE 2
 #define ERROR_FILE 3
 
-//calculate average mark
-float rating(float s, float c)
+typedef struct class
 {
-    if(c<3)
+    char name[200];
+    float avrg_mark;
+}stud;
+
+//calculate average mark
+float rating(float sum, float count)
+{
+    if(count<3)
     {
-        s+= 2*(3-c);
-        c=3;
+        sum+= 2*(3-count);
+        count=3;
     }
-    return(s/c);
+    return(sum/count);
 }
 
 //calculate the best mark among students
-int best_stud(int number, stud* r)
+int best_stud(int number, stud* s)
 {
     float max = 0;
 
-    int number_of_stud;
+    int number_of_stud=0;
 
     for(int i =0; i<number; i++)
     {
-        if(r[i].avrg_mark>max)
+        if(s[i].avrg_mark>max)
         {
-            max=r[i].avrg_mark;
+            max=s[i].avrg_mark;
             number_of_stud=i;
         }
     }
@@ -37,38 +43,26 @@ int best_stud(int number, stud* r)
     return number_of_stud;
 }
  
-typedef struct class
-{
-    char name[200];
-    float avrg_mark;
-}stud;
  
 int main(int argc, char* argv[])
 {
-    if(argc<1)
+    if(argc<2)
     {
         printf("Please, enter the path to the file before starting the program");
         return NO_ARGS;
     }
 
-    char name_f[argc];
-
-    for(int i=0; i<argc; i++)
-    {
-        name_f[i] = argv[i];
-    }
-
-    FILE *f =fopen(name_f , "r");
+    FILE *f =fopen(argv[1] , "r");
 
     if(f==NULL)
     {
-        return EMPTY_FILE;
+        perror("fopen() failed");
     }
+   
 
-    char str= calloc(100, sizeof(char));
+    char* str= (char*)calloc(1000, sizeof(char));
     stud arr[30];
    
-    char name_s[200];
     int num_str =0;
 
     while(feof(f)==0)
@@ -76,27 +70,34 @@ int main(int argc, char* argv[])
         fgets(str,999,f);
      
         int len_str = strlen(str);
+
         float sum_mark =0;
         float count_mark = 0;
- 
-        while(isdigit(str[len_str] || str[len_str] == ','))
+
+        //-'\0' - '\n'
+        len_str-=2;
+
+        while(isdigit(str[len_str]) || str[len_str] == ',')
+        //for(;len_str>0;len_str--)
         {
-            if(isdigit(str[i]))
+            
+            if(isdigit(str[len_str]))
             {
-                sum_mark += (str[i]-'0');
+                sum_mark += (str[len_str]-'0');
                 count_mark++;
+                
             }
             len_str--;
         }
 
-        int end_name = len_str-1;
-
-        arr[num_str].avrg_mark =rating(sum_mark,count_mark);
+        
        
-        for(int i= 0; i<end_name; i++)
+        for(int i= 0; i<len_str; i++)
             {
                 arr[num_str].name[i]=str[i];
             }
+
+        arr[num_str].avrg_mark =rating(sum_mark,count_mark);
 
         num_str++;
 
@@ -104,13 +105,13 @@ int main(int argc, char* argv[])
 
     if(ferror(f))
         {
-            perror("AAAAAA:" );
+            perror("Incorrect work of file" );
             return ERROR_FILE;
         }
     fclose(f);
 
-    int number_of_stud = best_stud(num_str,arr);
+    int best = best_stud(num_str,arr);
  
-    printf("Ученик с самым высоким средним баллом:  %f \n%s",  arr[number_of_stud].avrg_mark,
-    arr[number_of_stud].name);
+    printf("Ученик с самым высоким средним баллом:  %f \n%s",  arr[best].avrg_mark,
+    arr[best].name);
 }
